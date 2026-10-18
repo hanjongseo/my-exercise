@@ -35,25 +35,6 @@ function sortRecords(records: WorkoutRecord[]) {
   return [...records].sort((a, b) => b.date.localeCompare(a.date))
 }
 
-function readRecordsFromBrowser(): WorkoutRecord[] {
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (saved === null) return sortRecords(demoWorkouts)
-
-    const parsed: unknown = JSON.parse(saved)
-    if (!Array.isArray(parsed)) return sortRecords(demoWorkouts)
-    return sortRecords(parsed as WorkoutRecord[])
-  } catch {
-    return sortRecords(demoWorkouts)
-  }
-}
-
-function writeRecordsToBrowser(records: WorkoutRecord[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
-  } catch {}
-}
-
 export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<WorkoutRecord[]>([])
   const [isReady, setIsReady] = useState(false)
