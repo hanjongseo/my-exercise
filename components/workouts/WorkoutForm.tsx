@@ -19,7 +19,7 @@ export function WorkoutForm() {
   const [error, setError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
 
@@ -46,19 +46,31 @@ export function WorkoutForm() {
     }
 
     setIsSaving(true)
-    addWorkout({
-      date,
-      title,
-      category,
-      detail,
-      duration,
-      ...(setsValue ? { sets: Number(setsValue) } : {}),
-      ...(distanceValue ? { distance: Number(distanceValue) } : {}),
-      ...(note ? { note } : {}),
-    })
-    router.push("/workouts")
-  }
 
+    try {
+      await addWorkout({
+        date,
+        title,
+        category,
+        detail,
+        duration,
+        ...(setsValue ? { sets: Number(setsValue) } : {}),
+        ...(distanceValue ? { distance: Number(distanceValue) } : {}),
+        ...(note ? { note } : {}),
+      })
+
+      router.push("/workouts")
+      router.refresh()
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "운동 기록 저장에 실패했습니다.",
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
   return (
     <form
       onSubmit={handleSubmit}

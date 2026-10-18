@@ -1,98 +1,126 @@
-"use client";
+"use client"
 
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
   type ReactNode,
-} from "react";
-import { demoWorkouts } from "@/lib/demo-workouts";
-import type { WorkoutRecord } from "@/types/workout";
+} from "react"
+import {
+  getWorkoutsAction,
+  createWorkoutAction,
+  deleteWorkoutAction,
+} from "@/lib/actions"
+import type { WorkoutRecord } from "@/types/workout"
 
-const STORAGE_KEY = "my-move-workout-records-v1";
-
-type NewWorkoutRecord = Omit<WorkoutRecord, "id">;
+type NewWorkoutRecord = Omit<WorkoutRecord, "id">
 type WorkoutContextValue = {
-  records: WorkoutRecord[];
-  isReady: boolean;
-  addWorkout: (record: NewWorkoutRecord) => void;
-  deleteWorkout: (id: string) => void;
-};
+  records: WorkoutRecord[]
+  isReady: boolean
+  addWorkout: (record: NewWorkoutRecord) => Promise<WorkoutRecord>
 
-const WorkoutContext = createContext<WorkoutContextValue | null>(null);
+  deleteWorkout: (id: string) => Promise<void>
+}
+
+const WorkoutContext = createContext<WorkoutContextValue | null>(null)
 
 function sortRecords(records: WorkoutRecord[]) {
-  return [...records].sort((a, b) => b.date.localeCompare(a.date));
+  return [...records].sort((a, b) => b.date.localeCompare(a.date))
 }
 
 function readRecordsFromBrowser(): WorkoutRecord[] {
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === null) return sortRecords(demoWorkouts);
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    if (saved === null) return sortRecords(demoWorkouts)
 
-    const parsed: unknown = JSON.parse(saved);
-    if (!Array.isArray(parsed)) return sortRecords(demoWorkouts);
-    return sortRecords(parsed as WorkoutRecord[]);
+    const parsed: unknown = JSON.parse(saved)
+    if (!Array.isArray(parsed)) return sortRecords(demoWorkouts)
+    return sortRecords(parsed as WorkoutRecord[])
   } catch {
-    return sortRecords(demoWorkouts);
+    return sortRecords(demoWorkouts)
   }
 }
 
 function writeRecordsToBrowser(records: WorkoutRecord[]) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  } catch {
-    // 브라우저 저장소가 차단된 경우에도 현재 페이지 상태에서는 사용할 수 있습니다.
-  }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
+  } catch {}
 }
 
 export function WorkoutProvider({ children }: { children: ReactNode }) {
-  const [records, setRecords] = useState<WorkoutRecord[]>(() => sortRecords(demoWorkouts));
-  const [isReady, setIsReady] = useState(false);
-  const recordsRef = useRef<WorkoutRecord[]>(sortRecords(demoWorkouts));
+  const [records, setRecords] = useState<WorkoutRecord[]>([])
+  const [isReady, setIsReady] = useState(false)
+  const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
-    const loadedRecords = readRecordsFromBrowser();
-    recordsRef.current = loadedRecords;
-    setRecords(loadedRecords);
-    writeRecordsToBrowser(loadedRecords);
-    setIsReady(true);
-  }, []);
+    let active = true
 
-  const addWorkout = useCallback((newRecord: NewWorkoutRecord) => {
-    const record: WorkoutRecord = {
-      ...newRecord,
-      id: typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `workout-${Date.now()}`,
-    };
-    const updatedRecords = sortRecords([record, ...recordsRef.current]);
-    recordsRef.current = updatedRecords;
-    setRecords(updatedRecords);
-    writeRecordsToBrowser(updatedRecords);
-  }, []);
+    getWorkoutsAction()
+      .then((data) => {
+        if (active) {
+          setRecords(sortRecords(data))
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "운동 기록을 불러오지 못했습니다.",
+          )
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsReady(true)
+        }
+      })
 
-  const deleteWorkout = useCallback((id: string) => {
-    const updatedRecords = recordsRef.current.filter((record) => record.id !== id);
-    recordsRef.current = updatedRecords;
-    setRecords(updatedRecords);
-    writeRecordsToBrowser(updatedRecords);
-  }, []);
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const addWorkout = useCallback(async (record: NewWorkoutRecord) => {
+    const saved = await createWorkoutAction(record)
+
+    setRecords((current) => sortRecords([saved, ...current]))
+
+    return saved
+  }, [])
+
+  const deleteWorkout = useCallback(async (id: string) => {
+    await deleteWorkoutAction(id)
+
+    setRecords((current) => current.filter((record) => record.id !== id))
+  }, [])
 
   return (
-    <WorkoutContext.Provider value={{ records, isReady, addWorkout, deleteWorkout }}>
+    <WorkoutContext.Provider
+      value={{
+        records,
+        isReady,
+        addWorkout,
+        deleteWorkout,
+      }}
+    >
+      {loadError && (
+        <p role="alert" className="p-3 text-sm text-red-600">
+          {loadError}
+        </p>
+      )}
+
       {children}
     </WorkoutContext.Provider>
-  );
+  )
 }
 
 export function useWorkoutStore() {
-  const context = useContext(WorkoutContext);
+  const context = useContext(WorkoutContext)
   if (!context) {
-    throw new Error("useWorkoutStore는 WorkoutProvider 안에서 사용해야 합니다.");
+    throw new Error("useWorkoutStore는 WorkoutProvider 안에서 사용해야 합니다.")
   }
-  return context;
+  return context
 }
