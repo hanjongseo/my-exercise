@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Save } from "lucide-react"
@@ -18,6 +18,12 @@ export function WorkoutForm() {
   const { addWorkout } = useWorkoutStore()
   const [error, setError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [date, setDate] = useState("")
+
+  // 서버와 브라우저 간의 시차로 인한 Hydration Error 방지
+  useEffect(() => {
+    setDate(getTodayString())
+  }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -25,7 +31,7 @@ export function WorkoutForm() {
 
     const form = event.currentTarget
     const formData = new FormData(form)
-    const date = String(formData.get("date") ?? "").trim()
+    const dateValue = String(formData.get("date") ?? "").trim()
     const title = String(formData.get("title") ?? "").trim()
     const category = String(
       formData.get("category") ?? "",
@@ -36,7 +42,12 @@ export function WorkoutForm() {
     const distanceValue = String(formData.get("distance") ?? "").trim()
     const note = String(formData.get("note") ?? "").trim()
 
-    if (!date || !title || !detail || !validCategories.includes(category)) {
+    if (
+      !dateValue ||
+      !title ||
+      !detail ||
+      !validCategories.includes(category)
+    ) {
       setError("날짜, 운동 이름, 종류, 운동 내용을 입력해주세요.")
       return
     }
@@ -49,7 +60,7 @@ export function WorkoutForm() {
 
     try {
       await addWorkout({
-        date,
+        date: dateValue,
         title,
         category,
         detail,
@@ -71,6 +82,7 @@ export function WorkoutForm() {
       setIsSaving(false)
     }
   }
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -91,7 +103,9 @@ export function WorkoutForm() {
             className={inputClass}
             type="date"
             name="date"
-            defaultValue={getTodayString()}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            suppressHydrationWarning
             required
           />
         </label>
@@ -182,7 +196,7 @@ export function WorkoutForm() {
         </Link>
         <button
           type="submit"
-          disabled={isSaving}
+          disnpmabled={isSaving}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-800 disabled:cursor-wait disabled:opacity-60"
         >
           <Save size={16} /> 기록 저장
