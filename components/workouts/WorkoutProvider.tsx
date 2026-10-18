@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  startTransition,
   useState,
   type ReactNode,
 } from "react"
@@ -46,21 +47,27 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     getWorkoutsAction()
       .then((data) => {
         if (active) {
-          setRecords(sortRecords(data))
+          startTransition(() => {
+            setRecords(sortRecords(data))
+          })
         }
       })
       .catch((error: unknown) => {
         if (active) {
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : "운동 기록을 불러오지 못했습니다.",
-          )
+          startTransition(() => {
+            setLoadError(
+              error instanceof Error
+                ? error.message
+                : "운동 기록을 불러오지 못했습니다.",
+            )
+          })
         }
       })
       .finally(() => {
         if (active) {
-          setIsReady(true)
+          startTransition(() => {
+            setIsReady(true)
+          })
         }
       })
 
