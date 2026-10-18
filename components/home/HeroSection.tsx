@@ -10,13 +10,10 @@ export function HeroSection() {
       </div>
       <div className="relative max-w-2xl">
         <h1 className="mt-6 text-4xl font-black leading-[1.13] tracking-tight sm:text-5xl lg:text-6xl">
-          오늘 운동을 가지 않으면
+          운동기록
           <br />
-          내일의 <span className="text-green-700">나도 가지 않는다.</span>
         </h1>
-        <p className="mt-5 max-w-xl text-sm leading-7 text-stone-500 sm:text-base">
-          일단 헬스장에 도착해서 생각합시다.
-        </p>
+
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/workouts/new"
