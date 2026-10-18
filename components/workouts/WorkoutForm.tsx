@@ -196,7 +196,7 @@ export function WorkoutForm() {
         </Link>
         <button
           type="submit"
-          disnpmabled={isSaving}
+          disabled={isSaving}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-800 disabled:cursor-wait disabled:opacity-60"
         >
           <Save size={16} /> 기록 저장
