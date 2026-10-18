@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   getWorkouts,
   createWorkout,
+  updateWorkout,
   deleteWorkout,
   type NewWorkoutRecord,
 } from "@/lib/workouts"
@@ -24,7 +25,21 @@ export async function createWorkoutAction(
 
   return saved
 }
+export async function updateWorkoutAction(
+  id: string,
+  record: NewWorkoutRecord,
+): Promise<WorkoutRecord> {
+  if (!mongoose.isValidObjectId(id)) {
+    throw new Error("운동 기록 ID가 올바르지 않습니다.")
+  }
 
+  const updated = await updateWorkout(id, record)
+
+  revalidatePath("/")
+  revalidatePath("/workouts")
+
+  return updated
+}
 export async function deleteWorkoutAction(id: string) {
   if (!mongoose.isValidObjectId(id)) {
     throw new Error("운동 기록 ID가 올바르지 않습니다.")

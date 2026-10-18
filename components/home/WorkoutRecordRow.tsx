@@ -1,34 +1,49 @@
-import { Clock3, Trash2 } from "lucide-react";
-import type { WorkoutRecord } from "@/types/workout";
-import { formatWorkoutDate } from "@/lib/date";
-import { WorkoutCategoryBadge } from "@/components/home/WorkoutCategoryBadge";
+import { Clock3, Trash2 } from "lucide-react"
+import type { WorkoutRecord } from "@/types/workout"
+import { formatWorkoutDate } from "@/lib/date"
+import { WorkoutCategoryBadge } from "@/components/home/WorkoutCategoryBadge"
+import Link from "next/link"
 
 export function WorkoutRecordRow({
   record,
   showNote = false,
   onDelete,
 }: {
-  record: WorkoutRecord;
-  showNote?: boolean;
-  onDelete: () => void;
+  record: WorkoutRecord
+  showNote?: boolean
+  onDelete: () => void
 }) {
   return (
     <article className="grid gap-3 px-5 py-4 transition hover:bg-stone-50/70 md:grid-cols-[1.05fr_1.1fr_0.85fr_1.65fr_0.55fr_auto] md:items-center md:gap-4">
-      <p className="text-xs font-medium tabular-nums text-stone-400">{formatWorkoutDate(record.date)}</p>
+      <p className="text-xs font-medium tabular-nums text-stone-400">
+        {formatWorkoutDate(record.date)}
+      </p>
       <div>
         <p className="text-sm font-bold">{record.title}</p>
-        {showNote && record.note && <p className="mt-1 text-xs text-stone-400">{record.note}</p>}
+        {showNote && record.note && (
+          <p className="mt-1 text-xs text-stone-400">{record.note}</p>
+        )}
       </div>
-      <div><WorkoutCategoryBadge category={record.category} /></div>
+      <div>
+        <WorkoutCategoryBadge category={record.category} />
+      </div>
       <p className="text-sm leading-5 text-stone-500">
         {record.detail}
         {record.sets ? ` · 총 ${record.sets}세트` : ""}
         {record.distance ? ` · ${record.distance}km` : ""}
       </p>
       <p className="inline-flex items-center gap-1 text-sm font-bold md:justify-end">
-        <Clock3 size={14} className="text-stone-400 md:hidden" />{record.duration}분
+        <Clock3 size={14} className="text-stone-400 md:hidden" />
+        {record.duration}분
       </p>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link
+          href={`/workouts/${record.id}/edit`}
+          className="inline-flex items-center justify-center rounded-full border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-700 transition hover:border-stone-900"
+        >
+          수정
+        </Link>
+
         <button
           type="button"
           onClick={onDelete}
@@ -40,5 +55,5 @@ export function WorkoutRecordRow({
         </button>
       </div>
     </article>
-  );
+  )
 }

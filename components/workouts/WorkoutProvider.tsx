@@ -11,12 +11,17 @@ import {
 import {
   getWorkoutsAction,
   createWorkoutAction,
+  updateWorkoutAction,
   deleteWorkoutAction,
 } from "@/lib/actions"
 import type { WorkoutRecord } from "@/types/workout"
 
 type NewWorkoutRecord = Omit<WorkoutRecord, "id">
 type WorkoutContextValue = {
+  updateWorkout: (
+    id: string,
+    record: NewWorkoutRecord,
+  ) => Promise<WorkoutRecord>
   records: WorkoutRecord[]
   isReady: boolean
   addWorkout: (record: NewWorkoutRecord) => Promise<WorkoutRecord>
@@ -90,7 +95,18 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
 
     return saved
   }, [])
+  const updateWorkout = useCallback(
+    async (id: string, record: NewWorkoutRecord) => {
+      const updated = await updateWorkoutAction(id, record)
 
+      setRecords((current) =>
+        sortRecords(current.map((item) => (item.id === id ? updated : item))),
+      )
+
+      return updated
+    },
+    [],
+  )
   const deleteWorkout = useCallback(async (id: string) => {
     await deleteWorkoutAction(id)
 
@@ -103,6 +119,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         records,
         isReady,
         addWorkout,
+        updateWorkout,
         deleteWorkout,
       }}
     >
