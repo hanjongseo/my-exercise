@@ -9,22 +9,29 @@ import {
   useState,
   type ReactNode,
 } from "react"
+
 import {
   getWorkoutsAction,
   createWorkoutAction,
   updateWorkoutAction,
   deleteWorkoutAction,
 } from "@/lib/actions"
+
 import type { WorkoutRecord } from "@/types/workout"
 
 type NewWorkoutRecord = Omit<WorkoutRecord, "id">
+
 type WorkoutContextValue = {
   updateWorkout: (
     id: string,
+
     record: NewWorkoutRecord,
   ) => Promise<WorkoutRecord>
+
   records: WorkoutRecord[]
+
   isReady: boolean
+
   addWorkout: (record: NewWorkoutRecord) => Promise<WorkoutRecord>
 
   deleteWorkout: (id: string) => Promise<void>
@@ -38,7 +45,9 @@ function sortRecords(records: WorkoutRecord[]) {
 
 export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<WorkoutRecord[]>([])
+
   const [isReady, setIsReady] = useState(false)
+
   const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
@@ -52,6 +61,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
           })
         }
       })
+
       .catch((error: unknown) => {
         if (active) {
           startTransition(() => {
@@ -63,6 +73,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
           })
         }
       })
+
       .finally(() => {
         if (active) {
           startTransition(() => {
@@ -83,6 +94,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
 
     return saved
   }, [])
+
   const updateWorkout = useCallback(
     async (id: string, record: NewWorkoutRecord) => {
       const updated = await updateWorkoutAction(id, record)
@@ -93,8 +105,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
 
       return updated
     },
+
     [],
   )
+
   const deleteWorkout = useCallback(async (id: string) => {
     await deleteWorkoutAction(id)
 
@@ -105,9 +119,13 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     <WorkoutContext.Provider
       value={{
         records,
+
         isReady,
+
         addWorkout,
+
         updateWorkout,
+
         deleteWorkout,
       }}
     >
@@ -124,8 +142,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
 
 export function useWorkoutStore() {
   const context = useContext(WorkoutContext)
+
   if (!context) {
     throw new Error("useWorkoutStore는 WorkoutProvider 안에서 사용해야 합니다.")
   }
+
   return context
 }
